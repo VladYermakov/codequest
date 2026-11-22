@@ -10,7 +10,7 @@
 <body><main class="shell">
 <header class="top"><div class="brand">&lt;/&gt; code<em>quest</em> · учитель</div><a href="/">До завдань</a></header>
 <section id="login" class="panel login"><h1>Вхід учителя</h1><p>Окрема захищена сторінка для перегляду коду учнів та виставлення оцінок.</p><form id="loginForm"><input id="username" autocomplete="username" placeholder="Логін учителя" required><input id="password" type="password" autocomplete="current-password" placeholder="Пароль" required><button class="button">Увійти</button></form><div class="error" id="loginError" role="alert"></div></section>
-<section id="app" hidden><div class="panel"><h1>Роботи учнів</h1><p class="muted">Тут показано останній запущений код для кожного учня й завдання. Оцінки видно лише в цій адмінці.</p><div class="toolbar"><label for="classSelect">Клас</label><select id="classSelect"><option>8В</option><option>9А</option></select><button class="button" id="refresh">Оновити</button><button class="button" id="logout" style="background:#59665e">Вийти</button></div><div class="error" id="pageError" role="alert"></div></div><div id="submissions"></div></section>
+<section id="app" hidden><div class="panel"><h1>Роботи учнів</h1><p class="muted">Тут показано останній запущений код для кожного учня й завдання. Оцінки видно лише в цій адмінці.</p><div class="toolbar"><label for="classSelect">Клас</label><select id="classSelect"><option>8В</option><option>9А</option><option>9Г</option></select><button class="button" id="refresh">Оновити</button><button class="button" id="logout" style="background:#59665e">Вийти</button></div><div class="error" id="pageError" role="alert"></div></div><div id="submissions"></div></section>
 </main>
 <script>
 const $=id=>document.getElementById(id);

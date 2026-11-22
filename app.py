@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CLASS_NAMES = {"8В", "9А", "9Г"}
 load_dotenv(os.path.join(BASE_DIR, ".env.local"))
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
@@ -123,7 +124,7 @@ def teacher_submissions():
     if not teacher_authenticated():
         return jsonify(error="Потрібен вхід учителя."), 401
     class_name = request.args.get("class_name", "8В")
-    if class_name not in {"8В", "9А"}:
+    if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
     records = Submission.query.join(Account).filter(
         Submission.class_name == class_name
@@ -171,7 +172,7 @@ def save_submission():
     code = payload.get("code")
     output = payload.get("output", "")
     is_correct = payload.get("is_correct", False)
-    if class_name not in {"8В", "9А"}:
+    if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
     if isinstance(challenge_id, bool) or not isinstance(challenge_id, int) or not 0 <= challenge_id < 10:
         return jsonify(error="Невідоме завдання."), 400
@@ -199,7 +200,7 @@ def save_submission():
 @app.get("/api/leaderboard")
 def leaderboard():
     class_name = request.args.get("class_name", "8В")
-    if class_name not in {"8В", "9А"}:
+    if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
     students = Student.query.filter_by(class_name=class_name).order_by(
         Student.score.desc(), Student.name.asc()
@@ -289,7 +290,7 @@ def get_progress():
     if account is None:
         return jsonify(error="Увійдіть, щоб зберігати прогрес."), 401
     class_name = request.args.get("class_name", "8В")
-    if class_name not in {"8В", "9А"}:
+    if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
     completed_ids = [row.challenge_id for row in Completion.query.filter_by(
         account_id=account.id, class_name=class_name
@@ -305,7 +306,7 @@ def save_progress():
     payload = request.get_json(silent=True) or {}
     class_name = payload.get("class_name", "8В")
     completed_ids = payload.get("completed_ids")
-    if class_name not in {"8В", "9А"}:
+    if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
     if (not isinstance(completed_ids, list) or len(completed_ids) > 10 or
             any(isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < 10
@@ -333,7 +334,7 @@ def update_score():
     class_name = payload.get("class_name", "8В")
     if isinstance(score, bool) or not isinstance(score, int) or score < 0 or score > 5000:
         return jsonify(error="Некоректна кількість балів."), 400
-    if class_name not in {"8В", "9А"}:
+    if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
 
     name = account.username
