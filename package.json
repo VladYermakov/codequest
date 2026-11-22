@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "build": "python3 -m compileall -q app.py"
+  },
+  "dependencies": {
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9"
+  },
+  "name": "codequest",
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

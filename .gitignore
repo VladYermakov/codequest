@@ -6,3 +6,6 @@ instance/
 .env
 
 .DS_Store
+.neon
+node_modules/
+.env.local

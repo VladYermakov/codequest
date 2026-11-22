@@ -16,6 +16,12 @@ python app.py
 
 Open http://localhost:5000. The app uses a local SQLite database by default. Students create a username and password or sign in; passwords are stored as hashes, and the server takes the leaderboard identity from the signed-in session. Completed challenge IDs are stored on the server per account and class, and merged with browser progress when a student signs in. Editor drafts are remembered in that browser per profile, class, and task. Each student's latest run for a task (code, output, and whether it matched the expected answer) is saved on the server for the teacher at `/teacher`. School grades are visible only in that teacher panel, never on student pages or the leaderboard. Pyodide is loaded from jsDelivr, so students need an internet connection for the first Python runtime download.
 
+## Use Neon Postgres locally or on Render
+
+The Neon CLI writes the pooled `DATABASE_URL` into `.env.local` after `neon deploy`. `.env.local` is ignored by Git, and the app loads it automatically for local development. SQLAlchemy connects with psycopg 3 and checks pooled connections before reusing them. Keep `DATABASE_URL_UNPOOLED` private and use the pooled `DATABASE_URL` for this web app.
+
+For Render, add `DATABASE_URL` as a private environment variable in the service settings, using the pooled value from Neon. Also set `SECRET_KEY`, `TEACHER_USERNAME`, and `TEACHER_PASSWORD` there. Do not commit `.env.local` or put database credentials in source control.
+
 ## Deploy to Heroku
 
 Install the Heroku CLI, sign in with `heroku login`, then run these commands from this directory. Heroku detects `requirements.txt`, selects Python from `.python-version`, and launches Gunicorn using `Procfile`.

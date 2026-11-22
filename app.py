@@ -7,9 +7,11 @@ from datetime import timedelta
 from flask import Flask, jsonify, request, send_from_directory, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
+from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env.local"))
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 if "DYNO" in os.environ and not os.environ.get("SECRET_KEY"):
@@ -37,6 +39,7 @@ if database_url.startswith("postgresql://"):
 app.config.update(
     SQLALCHEMY_DATABASE_URI=database_url,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True, "pool_recycle": 300},
 )
 db = SQLAlchemy(app)
 
