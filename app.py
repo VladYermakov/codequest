@@ -13,14 +13,16 @@ from werkzeug.security import check_password_hash, generate_password_hash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLASS_NAMES = {"8В", "9А", "9Г"}
 load_dotenv(os.path.join(BASE_DIR, ".env.local"))
+IS_DEPLOYED = bool(os.environ.get("DYNO")) or os.environ.get("RENDER", "").lower() == "true"
 app = Flask(__name__, static_folder=None)
-app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
-if "DYNO" in os.environ and not os.environ.get("SECRET_KEY"):
-    raise RuntimeError("Set SECRET_KEY in the deployment environment before starting the app.")
+secret_key = os.environ.get("SECRET_KEY")
+if IS_DEPLOYED and not secret_key:
+    raise RuntimeError("Set a stable SECRET_KEY in the deployment environment before starting the app.")
+app.secret_key = secret_key or secrets.token_hex(32)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.environ.get("COOKIE_SECURE", "").lower() == "true" or "DYNO" in os.environ,
+    SESSION_COOKIE_SECURE=os.environ.get("COOKIE_SECURE", "").lower() == "true" or IS_DEPLOYED,
     PERMANENT_SESSION_LIFETIME=timedelta(days=7),
 )
 
@@ -32,7 +34,10 @@ def set_security_headers(response):
     response.headers.setdefault("Referrer-Policy", "same-origin")
     return response
 
-database_url = os.environ.get("DATABASE_URL", "sqlite:///classroom.db")
+database_url = os.environ.get("DATABASE_URL")
+if IS_DEPLOYED and not database_url:
+    raise RuntimeError("Set DATABASE_URL to a persistent PostgreSQL database before starting the app.")
+database_url = database_url or "sqlite:///classroom.db"
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 if database_url.startswith("postgresql://"):

@@ -47,6 +47,6 @@ The database add-on sets `DATABASE_URL` for the app. Choose a currently availabl
 - The teacher panel at `/teacher` uses separate credentials from student accounts. Set `TEACHER_USERNAME` and a private `TEACHER_PASSWORD` (at least 12 characters) in the environment.
 - The teacher panel shows only the most recent run per student and task. Grades are private to authenticated teacher sessions.
 - The browser checks challenge answers, including additional input variants for algorithmic tasks, and submits points. This discourages hardcoded outputs such as `print(15)`, but a determined student can still modify browser code or requests. Do not treat the points as official grades or prizes without a trusted server-side evaluator.
-- Set a stable, private `SECRET_KEY` in the deployment environment. The app refuses to start on Heroku without one.
+- Set a stable, private `SECRET_KEY` and a persistent Postgres `DATABASE_URL` in the deployment environment. On Render or Heroku the app refuses to start if either is missing, rather than silently using a temporary SQLite file or a changing session key.
 - Python runs in the browser through Pyodide. When a signed-in student runs code, the latest code and its output are sent to the server so the teacher can review them. The student page does not expose teacher grades.
 - SQLite is for local development. Use Postgres for a deployed app so leaderboard data persists across app restarts.
