@@ -19,50 +19,52 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
 <script>
-const tablesInfo=`У таблицях — звичайні рядки з даними. Назви в дужках — це колонки, тобто властивості записів.
+const tablesInfo=`У таблицях — рядки з даними. Назви в дужках — це назви колонок. Нижче наведено приклади рядків; у таблицях є й інші записи.
 
 Учні · students
 ім'я (name) | клас (class) | вік (age)
-Олена | 9А | 14
-Максим | 9А | 15
-Софія | 9Г | 14
-Іван | 8В | 13
-Марія | 9Г | 15
+Олена | 10Д | 15
+Максим | 10Д | 16
+Софія | 10Д | 14
+…
 
 Книжки · books
 назва (title) | автор (author) | рік (year)
 Кобзар | Тарас Шевченко | 1840
 Лісова пісня | Леся Українка | 1911
-Тигролови | Іван Багряний | 1944
+На крилах пісень | Леся Українка | 1893
+…
 
 Товари · products
 назва (name) | ціна (price) | кількість (quantity)
 Зошит | 35 | 12
 Ручка | 20 | 0
 Рюкзак | 850 | 4
+…
 
 Оцінки · grades
 учень (student) | предмет (subject) | бал (score)
 Олена | Математика | 10
 Максим | Математика | 8
-Софія | Інформатика | 12`;
+Софія | Математика | 12
+…`;
 const tasks=[
- {title:'Покажи всіх учнів',description:'Виведи всі записи з таблиці «Учні» (students).',table:'students',answer:{columns:['name','class','age'],rows:[['Олена','9А',14],['Максим','9А',15],['Софія','9Г',14],['Іван','8В',13],['Марія','9Г',15]]}},
- {title:'Покажи імена учнів',description:'Виведи лише імена всіх учнів.',table:'students',answer:{columns:['name'],rows:[['Олена'],['Максим'],['Софія'],['Іван'],['Марія']]}},
- {title:'Знайди учнів 9А',description:'Виведи всі дані про учнів із класу 9А.',table:'students',answer:{columns:['name','class','age'],rows:[['Олена','9А',14],['Максим','9А',15]]}},
- {title:'Знайди старших учнів',description:'Виведи імена учнів, яким більше ніж 14 років.',table:'students',answer:{columns:['name'],rows:[['Максим'],['Марія']]}},
- {title:'Покажи всі книжки',description:'Виведи всі записи з таблиці «Книжки» (books).',table:'books',answer:{columns:['title','author','year'],rows:[['Кобзар','Тарас Шевченко',1840],['Лісова пісня','Леся Українка',1911],['Тигролови','Іван Багряний',1944]]}},
- {title:'Знайди книжки Лесі Українки',description:'Виведи назви книжок авторства Лесі Українки.',table:'books',answer:{columns:['title'],rows:[['Лісова пісня']]}},
- {title:'Знайди новіші книжки',description:'Виведи назви книжок, виданих після 1900 року.',table:'books',answer:{columns:['title'],rows:[['Лісова пісня'],['Тигролови']]}},
- {title:'Знайди дешеві товари',description:'Виведи назви й ціни товарів дешевших за 100.',table:'products',answer:{columns:['name','price'],rows:[['Зошит',35],['Ручка',20]]}},
- {title:'Знайди товари, яких немає',description:'Виведи товари, кількість яких дорівнює нулю.',table:'products',answer:{columns:['name','quantity'],rows:[['Ручка',0]]}},
- {title:'Покажи оцінки з математики',description:'Виведи імена учнів і бали з предмета «Математика».',table:'grades',answer:{columns:['student','score'],rows:[['Олена',10],['Максим',8]]}}
+ {title:'Покажи всіх учнів',description:'Виведи всі колонки й усі рядки з таблиці students.',table:'students',answer:{columns:['name','class','age'],rows:[['Олена','10Д',15],['Максим','10Д',16],['Софія','10Д',14],['Іван','10Д',16],['Марія','10Д',15],['Андрій','10Д',17]]}},
+ {title:'Покажи імена учнів',description:'Виведи лише колонку name з таблиці students.',table:'students',answer:{columns:['name'],rows:[['Олена'],['Максим'],['Софія'],['Іван'],['Марія'],['Андрій']]}},
+ {title:'Знайди учнів 10Д',description:'З таблиці students виведи всі колонки учнів, у яких class дорівнює «10Д».',table:'students',answer:{columns:['name','class','age'],rows:[['Олена','10Д',15],['Максим','10Д',16],['Софія','10Д',14],['Іван','10Д',16],['Марія','10Д',15],['Андрій','10Д',17]]}},
+ {title:'Знайди учнів старших за 14',description:'Виведи лише колонку name для учнів, у яких age більше за 14.',table:'students',answer:{columns:['name'],rows:[['Олена'],['Максим'],['Іван'],['Марія'],['Андрій']]}},
+ {title:'Покажи всі книжки',description:'Виведи всі колонки й усі рядки з таблиці books.',table:'books',answer:{columns:['title','author','year'],rows:[['Кобзар','Тарас Шевченко',1840],['Лісова пісня','Леся Українка',1911],['На крилах пісень','Леся Українка',1893],['Тигролови','Іван Багряний',1944],['Місто','Валер’ян Підмогильний',1928],['Кайдашева сім’я','Іван Нечуй-Левицький',1879]]}},
+ {title:'Знайди книжки Лесі Українки',description:'Виведи лише колонку title для книжок, у яких author — «Леся Українка».',table:'books',answer:{columns:['title'],rows:[['Лісова пісня'],['На крилах пісень']]}},
+ {title:'Знайди книжки після 1900 року',description:'Виведи лише колонку title для книжок, у яких year більше за 1900.',table:'books',answer:{columns:['title'],rows:[['Лісова пісня'],['Тигролови'],['Місто']]}},
+ {title:'Знайди товари дешевші за 100 грн',description:'Виведи колонки name і price для товарів, у яких price менше за 100.',table:'products',answer:{columns:['name','price'],rows:[['Зошит',35],['Ручка',20],['Олівець',10],['Папір',90],['Фломастери',75]]}},
+ {title:'Знайди товари без залишку',description:'Виведи саме колонки name (назва товару) і quantity (кількість) для товарів, у яких quantity дорівнює 0.',table:'products',answer:{columns:['name','quantity'],rows:[['Ручка',0],['Папір',0]]}},
+ {title:'Покажи оцінки з математики',description:'Виведи колонки student (ім’я учня) і score (бал) лише для рядків, у яких subject — «Математика».',table:'grades',answer:{columns:['student','score'],rows:[['Олена',10],['Максим',8],['Софія',12],['Іван',7],['Марія',11]]}}
 ];
 let active=0, SQL=null;
 const $=id=>document.getElementById(id);
 document.getElementById('classSelect').addEventListener('change',event=>{if(event.target.value==='10Д')return;window.location.href='/?class='+encodeURIComponent(event.target.value)});
 function renderTask(){const t=tasks[active];$('title').textContent=t.title;$('description').textContent=t.description;$('query').value='';$('schema').textContent=tablesInfo;$('output').className='output';$('output').textContent='Результат запиту з’явиться тут.';document.querySelectorAll('.task').forEach((x,i)=>x.classList.toggle('active',i===active));}
-function makeDatabase(){const db=new SQL.Database();db.run('CREATE TABLE students (name TEXT, class TEXT, age INTEGER); INSERT INTO students (name,class,age) VALUES (\'Олена\',\'9А\',14),(\'Максим\',\'9А\',15),(\'Софія\',\'9Г\',14),(\'Іван\',\'8В\',13),(\'Марія\',\'9Г\',15); CREATE TABLE books (title TEXT,author TEXT,year INTEGER); INSERT INTO books (title,author,year) VALUES (\'Кобзар\',\'Тарас Шевченко\',1840),(\'Лісова пісня\',\'Леся Українка\',1911),(\'Тигролови\',\'Іван Багряний\',1944); CREATE TABLE products (name TEXT,price INTEGER,quantity INTEGER); INSERT INTO products (name,price,quantity) VALUES (\'Зошит\',35,12),(\'Ручка\',20,0),(\'Рюкзак\',850,4); CREATE TABLE grades (student TEXT,subject TEXT,score INTEGER); INSERT INTO grades (student,subject,score) VALUES (\'Олена\',\'Математика\',10),(\'Максим\',\'Математика\',8),(\'Софія\',\'Інформатика\',12)');return db;}
+function makeDatabase(){const db=new SQL.Database();db.run(`CREATE TABLE students (name TEXT, class TEXT, age INTEGER); INSERT INTO students (name,class,age) VALUES ('Олена','10Д',15),('Максим','10Д',16),('Софія','10Д',14),('Іван','10Д',16),('Марія','10Д',15),('Андрій','10Д',17); CREATE TABLE books (title TEXT,author TEXT,year INTEGER); INSERT INTO books (title,author,year) VALUES ('Кобзар','Тарас Шевченко',1840),('Лісова пісня','Леся Українка',1911),('На крилах пісень','Леся Українка',1893),('Тигролови','Іван Багряний',1944),('Місто','Валер’ян Підмогильний',1928),('Кайдашева сім’я','Іван Нечуй-Левицький',1879); CREATE TABLE products (name TEXT,price INTEGER,quantity INTEGER); INSERT INTO products (name,price,quantity) VALUES ('Зошит',35,12),('Ручка',20,0),('Рюкзак',850,4),('Олівець',10,20),('Пенал',120,5),('Папір',90,0),('Фломастери',75,8); CREATE TABLE grades (student TEXT,subject TEXT,score INTEGER); INSERT INTO grades (student,subject,score) VALUES ('Олена','Математика',10),('Максим','Математика',8),('Софія','Математика',12),('Іван','Математика',7),('Марія','Математика',11),('Андрій','Інформатика',9)`);return db;}
 function isCorrect(results,task){if(results.length!==1)return false;const actual=results[0];if(JSON.stringify(actual.columns)!==JSON.stringify(task.answer.columns))return false;const normalize=rows=>rows.map(row=>JSON.stringify(row)).sort();return JSON.stringify(normalize(actual.values))===JSON.stringify(normalize(task.answer.rows))}
 function showRows(result,correct){if(!result.length){$('output').textContent='Запит не повернув таблицю з результатами.'}else{const {columns,values}=result[0],table=document.createElement('table'),thead=document.createElement('thead'),tr=document.createElement('tr');columns.forEach(name=>{const th=document.createElement('th');th.textContent=name;tr.append(th)});thead.append(tr);table.append(thead);const tbody=document.createElement('tbody');values.slice(0,200).forEach(row=>{const tr=document.createElement('tr');row.forEach(value=>{const td=document.createElement('td');td.textContent=value===null?'NULL':String(value);tr.append(td)});tbody.append(tr)});table.append(tbody);$('output').replaceChildren(table);if(values.length>200){const note=document.createElement('p');note.textContent='Показано перші 200 рядків.';$('output').append(note)}}const feedback=document.createElement('p');feedback.className='feedback '+(correct?'right':'wrong');feedback.textContent=correct?'✓ Правильно! Результат відповідає задачі.':'Ще не збігається. Перевір назви колонок, умову та результат.';$('output').append(feedback)}
 async function runQuery(){const button=$('run');button.disabled=true;button.textContent='Виконується…';$('output').className='output';$('output').textContent='Виконуємо запит у тимчасовій базі…';let db;try{if(!SQL){if(!window.initSqlJs)throw Error('Не вдалося завантажити SQL-движок. Перевірте інтернет-з’єднання.');SQL=await initSqlJs({locateFile:file=>'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/'+file})}const source=$('query').value;if(source.length>10000)throw Error('Запит задовгий (максимум 10 000 символів).');db=makeDatabase();const result=db.exec(source);showRows(result,isCorrect(result,tasks[active]))}catch(e){$('output').className='output error';$('output').textContent='Помилка SQL: '+(e.message||String(e))}finally{if(db)db.close();button.disabled=false;button.innerHTML='▶ &nbsp; Запустити запит'}}
