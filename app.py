@@ -95,6 +95,11 @@ def teacher_home():
     return send_from_directory(BASE_DIR, "teacher.html")
 
 
+@app.get("/sql")
+def sql_home():
+    return send_from_directory(BASE_DIR, "sql.html")
+
+
 def teacher_authenticated():
     return session.get("teacher_authenticated") is True
 
