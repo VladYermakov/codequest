@@ -219,7 +219,7 @@ def teacher_progress():
         student["completed_count"] = len(student["completed_ids"])
         student["score"] = len(student["completed_ids"]) * 50 if class_name == "10Д" else score_by_name.get(student["username"].casefold(), 0)
     students.sort(key=lambda student: (-student["completed_count"], -student["score"], student["username"].casefold()))
-    return jsonify(class_name=class_name, total_tasks=10, students=students)
+    return jsonify(class_name=class_name, total_tasks=6 if class_name == "9Г" else 10, students=students)
 
 
 @app.post("/api/teacher/grade")
