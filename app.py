@@ -12,6 +12,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLASS_NAMES = {"8В", "9А", "9Г"}
+TEACHER_CLASS_NAMES = CLASS_NAMES | {"10Д"}
 load_dotenv(os.path.join(BASE_DIR, ".env.local"))
 IS_DEPLOYED = bool(os.environ.get("DYNO")) or os.environ.get("RENDER", "").lower() == "true"
 app = Flask(__name__, static_folder=None)
@@ -71,6 +72,29 @@ class Completion(db.Model):
     __table_args__ = (db.UniqueConstraint("account_id", "class_name", "challenge_id"),)
 
 
+class ClassEnrollment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False, index=True)
+    class_name = db.Column(db.String(8), nullable=False)
+    account = db.relationship(Account)
+    __table_args__ = (db.UniqueConstraint("account_id", "class_name"),)
+
+
+class SQLParticipant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False, unique=True, index=True)
+    account = db.relationship(Account)
+    first_seen_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
+class SQLCompletion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False, index=True)
+    challenge_id = db.Column(db.Integer, nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    __table_args__ = (db.UniqueConstraint("account_id", "challenge_id"),)
+
+
 class Submission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey("account.id"), nullable=False, index=True)
@@ -93,6 +117,11 @@ def home():
 @app.get("/teacher")
 def teacher_home():
     return send_from_directory(BASE_DIR, "teacher.html")
+
+
+@app.get("/teacher/submissions")
+def teacher_submissions_home():
+    return send_from_directory(BASE_DIR, "teacher_submissions.html")
 
 
 @app.get("/sql")
@@ -150,6 +179,47 @@ def teacher_submissions():
         "grade": row.grade,
         "updated_at": row.updated_at.isoformat(timespec="minutes"),
     } for row in records])
+
+
+@app.get("/api/teacher/progress")
+def teacher_progress():
+    if not teacher_authenticated():
+        return jsonify(error="Потрібен вхід учителя."), 401
+    class_name = request.args.get("class_name", "8В")
+    if class_name not in TEACHER_CLASS_NAMES:
+        return jsonify(error="Невідомий клас."), 400
+
+    if class_name == "10Д":
+        participants = SQLParticipant.query.join(Account).order_by(Account.username.asc()).all()
+        completed_by_account = {}
+        for row in SQLCompletion.query.order_by(SQLCompletion.challenge_id.asc()):
+            completed_by_account.setdefault(row.account_id, []).append(row.challenge_id)
+        students = [{
+            "username": participant.account.username,
+            "completed_ids": completed_by_account.get(participant.account_id, []),
+        } for participant in participants]
+    else:
+        account_ids = {row[0] for row in db.session.query(Completion.account_id).filter_by(class_name=class_name).distinct()}
+        account_ids.update(row[0] for row in db.session.query(Submission.account_id).filter_by(class_name=class_name).distinct())
+        account_ids.update(row[0] for row in db.session.query(ClassEnrollment.account_id).filter_by(class_name=class_name).distinct())
+        accounts = Account.query.filter(Account.id.in_(account_ids)).order_by(Account.username.asc()).all() if account_ids else []
+        completed_by_account = {}
+        for row in Completion.query.filter_by(class_name=class_name).order_by(Completion.challenge_id.asc()):
+            completed_by_account.setdefault(row.account_id, []).append(row.challenge_id)
+        students = [{
+            "username": account.username,
+            "completed_ids": completed_by_account.get(account.id, []),
+        } for account in accounts]
+
+    score_by_name = {}
+    for student in Student.query.filter_by(class_name=class_name).all():
+        score_by_name[student.name.removeprefix(f"[{class_name}] ").casefold()] = student.score
+    for student in students:
+        student["completed_ids"] = sorted(set(student["completed_ids"]))
+        student["completed_count"] = len(student["completed_ids"])
+        student["score"] = len(student["completed_ids"]) * 50 if class_name == "10Д" else score_by_name.get(student["username"].casefold(), 0)
+    students.sort(key=lambda student: (-student["completed_count"], -student["score"], student["username"].casefold()))
+    return jsonify(class_name=class_name, total_tasks=10, students=students)
 
 
 @app.post("/api/teacher/grade")
@@ -302,6 +372,9 @@ def get_progress():
     class_name = request.args.get("class_name", "8В")
     if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
+    if ClassEnrollment.query.filter_by(account_id=account.id, class_name=class_name).first() is None:
+        db.session.add(ClassEnrollment(account_id=account.id, class_name=class_name))
+        db.session.commit()
     completed_ids = [row.challenge_id for row in Completion.query.filter_by(
         account_id=account.id, class_name=class_name
     ).order_by(Completion.challenge_id)]
@@ -322,6 +395,8 @@ def save_progress():
             any(isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < 10
                 for value in completed_ids)):
         return jsonify(error="Некоректний список виконаних завдань."), 400
+    if ClassEnrollment.query.filter_by(account_id=account.id, class_name=class_name).first() is None:
+        db.session.add(ClassEnrollment(account_id=account.id, class_name=class_name))
     existing = {row.challenge_id for row in Completion.query.filter_by(
         account_id=account.id, class_name=class_name
     )}
@@ -331,6 +406,53 @@ def save_progress():
         ))
     db.session.commit()
     return jsonify(completed_ids=sorted(existing | set(completed_ids)))
+
+
+@app.get("/api/sql/progress")
+def get_sql_progress():
+    account = current_student_account()
+    if account is None:
+        return jsonify(error="Увійдіть, щоб зберігати прогрес 10Д."), 401
+    participant = SQLParticipant.query.filter_by(account_id=account.id).first()
+    if participant is None:
+        db.session.add(SQLParticipant(account_id=account.id))
+        db.session.commit()
+    completed_ids = [row.challenge_id for row in SQLCompletion.query.filter_by(
+        account_id=account.id
+    ).order_by(SQLCompletion.challenge_id.asc())]
+    return jsonify(completed_ids=completed_ids, score=len(completed_ids) * 50)
+
+
+@app.post("/api/sql/progress")
+def save_sql_progress():
+    account = current_student_account()
+    if account is None:
+        return jsonify(error="Увійдіть, щоб зберігати прогрес 10Д."), 401
+    payload = request.get_json(silent=True) or {}
+    challenge_id = payload.get("challenge_id")
+    if isinstance(challenge_id, bool) or not isinstance(challenge_id, int) or not 0 <= challenge_id < 10:
+        return jsonify(error="Невідоме SQL-завдання."), 400
+    if SQLParticipant.query.filter_by(account_id=account.id).first() is None:
+        db.session.add(SQLParticipant(account_id=account.id))
+    if SQLCompletion.query.filter_by(account_id=account.id, challenge_id=challenge_id).first() is None:
+        db.session.add(SQLCompletion(account_id=account.id, challenge_id=challenge_id))
+    db.session.commit()
+    completed_ids = [row.challenge_id for row in SQLCompletion.query.filter_by(
+        account_id=account.id
+    ).order_by(SQLCompletion.challenge_id.asc())]
+    return jsonify(completed_ids=completed_ids, score=len(completed_ids) * 50)
+
+
+@app.get("/api/sql/leaderboard")
+def sql_leaderboard():
+    participants = SQLParticipant.query.join(Account).order_by(Account.username.asc()).all()
+    counts = dict(db.session.query(SQLCompletion.account_id, db.func.count(SQLCompletion.id)).group_by(
+        SQLCompletion.account_id
+    ).all())
+    entries = [{"name": participant.account.username, "score": counts.get(participant.account_id, 0) * 50}
+               for participant in participants]
+    entries.sort(key=lambda entry: (-entry["score"], entry["name"].casefold()))
+    return jsonify(entries[:50])
 
 
 @app.post("/api/score")
