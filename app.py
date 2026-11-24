@@ -114,6 +114,11 @@ def home():
     return send_from_directory(BASE_DIR, "index.html")
 
 
+@app.get("/v2")
+def v2_home():
+    return send_from_directory(BASE_DIR, "index_v2.html")
+
+
 @app.get("/teacher")
 def teacher_home():
     return send_from_directory(BASE_DIR, "teacher.html")
@@ -219,7 +224,7 @@ def teacher_progress():
         student["completed_count"] = len(student["completed_ids"])
         student["score"] = len(student["completed_ids"]) * 50 if class_name == "10Д" else score_by_name.get(student["username"].casefold(), 0)
     students.sort(key=lambda student: (-student["completed_count"], -student["score"], student["username"].casefold()))
-    return jsonify(class_name=class_name, total_tasks=16 if class_name == "9Г" else 10, students=students)
+    return jsonify(class_name=class_name, total_tasks=16 if class_name in {"9А", "9Г"} else 10, students=students)
 
 
 @app.post("/api/teacher/grade")
@@ -254,7 +259,7 @@ def save_submission():
     is_correct = payload.get("is_correct", False)
     if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
-    if isinstance(challenge_id, bool) or not isinstance(challenge_id, int) or not 0 <= challenge_id < (16 if class_name == "9Г" else 10):
+    if isinstance(challenge_id, bool) or not isinstance(challenge_id, int) or not 0 <= challenge_id < (16 if class_name in {"9А", "9Г"} else 10):
         return jsonify(error="Невідоме завдання."), 400
     if not isinstance(code, str) or len(code) > 50000:
         return jsonify(error="Код має бути текстом не довшим за 50 000 символів."), 400
@@ -391,7 +396,7 @@ def save_progress():
     completed_ids = payload.get("completed_ids")
     if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
-    max_tasks = 16 if class_name == "9Г" else 10
+    max_tasks = 16 if class_name in {"9А", "9Г"} else 10
     if (not isinstance(completed_ids, list) or len(completed_ids) > max_tasks or
             any(isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < max_tasks
                 for value in completed_ids)):
