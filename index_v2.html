@@ -84,7 +84,7 @@ challengeSets['9Г'].push(...stringChallenges);
 const initialUrl=new URL(window.location.href);const requestedClass=initialUrl.searchParams.get('class');if(requestedClass==='10Д')window.location.replace('/sql');const hasSelectedClass=Boolean(challengeSets[requestedClass]);let activeClass=hasSelectedClass?requestedClass:'8В';let challenges=challengeSets[activeClass];const requestedTask=Number.parseInt(initialUrl.searchParams.get('task')||'',10);let activeChallenge=Number.isInteger(requestedTask)&&requestedTask>=1&&requestedTask<=challenges.length?requestedTask-1:0;let authUser=null;let pyodide=null,running=false;
 function updateTaskUrl(){const url=new URL(window.location.href);url.searchParams.set('class',activeClass);url.searchParams.set('task',String(activeChallenge+1));window.history.replaceState(null,'',url)}
 function getStorageKey(){return 'codequest-classroom-v2-'+activeClass+'-'+(authUser?.username||'guest')}
-function getDraftStorageKey(){return 'codequest-code-v1-'+activeClass+'-'+(authUser?.username||'guest')}
+function getDraftStorageKey(){const namespace=activeClass==='8В'?'codequest-code-v2-8В':'codequest-code-v1-'+activeClass;return namespace+'-'+(authUser?.username||'guest')}
 function loadDraft(){try{return JSON.parse(localStorage.getItem(getDraftStorageKey())||'{}')}catch{return {}}}
 function saveDraft(){try{const drafts=loadDraft();drafts[activeChallenge]=$('code').value;localStorage.setItem(getDraftStorageKey(),JSON.stringify(drafts))}catch{}}
 function loadState(){let saved={name:authUser?.username||'',score:0,completedIds:[]};if(authUser){try{saved={...saved,...JSON.parse(localStorage.getItem(getStorageKey())||'{}'),name:authUser.username}}catch{}}if(!Array.isArray(saved.completedIds))saved.completedIds=[];return saved}
