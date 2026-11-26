@@ -90,6 +90,68 @@ const stringChallenges=[
 ];
 challengeSets['9А'].push(...stringChallenges);
 challengeSets['9Г'].push(...stringChallenges);
+challengeSets['9А'].push(
+  {
+    group: 'Рядки',
+    title: 'Склади ініціали',
+    summary: 'Дістань перші літери імені та прізвища й склади напис.',
+    task: 'Для first_name = "Марія" і last_name = "Коваль" створи ініціали у форматі М.К. Скористайся доступом до символів за індексом і з’єднай частини рядка оператором +.',
+    starter: '# Початкові дані\nfirst_name = "Марія"\nlast_name = "Коваль"\n\n# Склади ініціали у форматі М.К.\n# Виведи результат\n',
+    expected: 'М.К.',
+    variants: [
+      { inputs: { first_name: 'Іван', last_name: 'Мельник' }, expected: 'І.М.' },
+      { inputs: { first_name: 'Софія', last_name: 'Бондар' }, expected: 'С.Б.' },
+    ],
+  },
+  {
+    group: 'Рядки',
+    title: 'Знайди паліндром',
+    summary: 'Перевір, чи слово читається однаково зліва направо й справа наліво.',
+    task: 'Перевір слово word = "level". У Python запис word[::-1] створює рядок у зворотному порядку. Якщо слово однакове у двох напрямках, виведи «Паліндром», інакше — «Не паліндром».',
+    starter: '# Початкове слово\nword = "level"\n\n# Порівняй слово зі словом у зворотному порядку\n# Виведи один із двох написів з умови\n',
+    expected: 'Паліндром',
+    variants: [
+      { inputs: { word: 'radar' }, expected: 'Паліндром' },
+      { inputs: { word: 'python' }, expected: 'Не паліндром' },
+    ],
+  },
+  {
+    group: 'Рядки',
+    title: 'Замаскуй номер',
+    summary: 'Залиш видимими лише перші три та останні дві цифри.',
+    task: 'Для phone = "0671234567" створи рядок, у якому перші три й останні дві цифри залишаються видимими, а всі цифри між ними замінені на *. Кількість зірочок має залежати від довжини номера.',
+    starter: '# Початковий номер телефону\nphone = "0671234567"\n\n# Склади маскований номер зі зрізів і повторення символу *\n# Виведи результат\n',
+    expected: '067*****67',
+    variants: [
+      { inputs: { phone: '05012345' }, expected: '050***45' },
+      { inputs: { phone: '0939876543' }, expected: '093*****43' },
+    ],
+  },
+  {
+    group: 'Рядки',
+    title: 'Порахуй голосні',
+    summary: 'Перебери текст і порахуй голосні літери.',
+    task: 'Порахуй голосні у text = "програмування". Голосні української мови збережені у рядку vowels. Перебери символи text циклом і збільшуй лічильник, якщо символ є серед vowels.',
+    starter: '# Початковий текст і голосні\ntext = "програмування"\nvowels = "аеєиіїоуюя"\ncount = 0\n\n# Перебери літери text і порахуй голосні\n# Виведи count\n',
+    expected: '5',
+    variants: [
+      { inputs: { text: 'молоко' }, expected: '3' },
+      { inputs: { text: 'сонце' }, expected: '2' },
+    ],
+  },
+  {
+    group: 'Рядки й масиви',
+    title: 'Створи хештеги зі списку',
+    summary: 'Перетвори слова зі списку на один рядок із хештегами.',
+    task: 'У списку topics збережено слова. Циклом for пройди по списку, перетвори кожне слово на великі літери, додай перед ним # і з’єднай хештеги пробілами. Виведи готовий рядок.',
+    starter: '# Список тем\ntopics = ["python", "рядки", "списки"]\nresult = ""\n\n# Пройди циклом по topics і склади хештеги в result\n# Виведи result\n',
+    expected: '#PYTHON #РЯДКИ #СПИСКИ',
+    variants: [
+      { inputs: { topics: ['код', 'ігри'] }, expected: '#КОД #ІГРИ' },
+      { inputs: { topics: ['математика', 'python', 'sql'] }, expected: '#МАТЕМАТИКА #PYTHON #SQL' },
+    ],
+  },
+);
 const initialUrl=new URL(window.location.href);const requestedClass=initialUrl.searchParams.get('class');if(requestedClass==='10Д')window.location.replace('/sql');const hasSelectedClass=Boolean(challengeSets[requestedClass]);let activeClass=hasSelectedClass?requestedClass:'8В';let challenges=challengeSets[activeClass];const requestedTask=Number.parseInt(initialUrl.searchParams.get('task')||'',10);let activeChallenge=Number.isInteger(requestedTask)&&requestedTask>=1&&requestedTask<=challenges.length?requestedTask-1:0;let authUser=null;let pyodide=null,running=false;
 function updateTaskUrl(){const url=new URL(window.location.href);url.searchParams.set('class',activeClass);url.searchParams.set('task',String(activeChallenge+1));window.history.replaceState(null,'',url);$('leaderboardPageLink').href='/leaderboard?class='+encodeURIComponent(activeClass);$('fullLeaderboardLink').href='/leaderboard?class='+encodeURIComponent(activeClass)}
 function getStorageKey(){return 'codequest-classroom-v2-'+activeClass+'-'+(authUser?.username||'guest')}

@@ -13,6 +13,13 @@ from werkzeug.security import check_password_hash, generate_password_hash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLASS_NAMES = {"8В", "9А", "9Г"}
 TEACHER_CLASS_NAMES = CLASS_NAMES | {"10Д"}
+CLASS_TASK_COUNTS = {"8В": 20, "9А": 26, "9Г": 21}
+
+
+def task_count_for(class_name):
+    return CLASS_TASK_COUNTS.get(class_name, 10)
+
+
 load_dotenv(os.path.join(BASE_DIR, ".env.local"))
 IS_DEPLOYED = bool(os.environ.get("DYNO")) or os.environ.get("RENDER", "").lower() == "true"
 app = Flask(__name__, static_folder=None)
@@ -229,7 +236,7 @@ def teacher_progress():
         student["completed_count"] = len(student["completed_ids"])
         student["score"] = len(student["completed_ids"]) * 50 if class_name == "10Д" else score_by_name.get(student["username"].casefold(), 0)
     students.sort(key=lambda student: (-student["completed_count"], -student["score"], student["username"].casefold()))
-    return jsonify(class_name=class_name, total_tasks=20 if class_name == "8В" else 21 if class_name in {"9А", "9Г"} else 10, students=students)
+    return jsonify(class_name=class_name, total_tasks=task_count_for(class_name), students=students)
 
 
 @app.post("/api/teacher/grade")
@@ -264,7 +271,7 @@ def save_submission():
     is_correct = payload.get("is_correct", False)
     if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
-    max_tasks = 20 if class_name == "8В" else 21 if class_name in {"9А", "9Г"} else 10
+    max_tasks = task_count_for(class_name)
     if isinstance(challenge_id, bool) or not isinstance(challenge_id, int) or not 0 <= challenge_id < max_tasks:
         return jsonify(error="Невідоме завдання."), 400
     if not isinstance(code, str) or len(code) > 50000:
@@ -402,7 +409,7 @@ def save_progress():
     completed_ids = payload.get("completed_ids")
     if class_name not in CLASS_NAMES:
         return jsonify(error="Невідомий клас."), 400
-    max_tasks = 20 if class_name == "8В" else 21 if class_name in {"9А", "9Г"} else 10
+    max_tasks = task_count_for(class_name)
     if (not isinstance(completed_ids, list) or len(completed_ids) > max_tasks or
             any(isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < max_tasks
                 for value in completed_ids)):
