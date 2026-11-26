@@ -119,6 +119,11 @@ def v2_home():
     return send_from_directory(BASE_DIR, "index_v2.html")
 
 
+@app.get("/leaderboard")
+def leaderboard_page():
+    return send_from_directory(BASE_DIR, "leaderboard.html")
+
+
 @app.get("/teacher")
 def teacher_home():
     return send_from_directory(BASE_DIR, "teacher.html")
